@@ -18,9 +18,13 @@ public partial class CalculadoradeEnvios : ContentPage
             return;
         }
 
-        if (!double.TryParse(txtPeso.Text, out double peso))
+        String textoPeso = txtPeso.Text.Replace(',', '.');
+
+        if (!double.TryParse(textoPeso, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture,
+            out double peso) || peso <= 0)
+
         {
-            await DisplayAlert("Error", "Por favor ingrese valores numericos validos.", "Ok");
+            await DisplayAlert("Error", "Por favor ingrese un peso numerico mayor que 0.", "Ok");
             return;
         }
 
@@ -31,31 +35,40 @@ public partial class CalculadoradeEnvios : ContentPage
         }
 
 
-        double envio = pckDestino.SelectedIndex.ToString() switch
+        double tarifa = pckDestino.SelectedIndex.ToString() switch
         {
-            "0" => 50 + (peso * 50),  // zona local
-            "1" => 85 + (peso * 85), // zona nacional
-            "2" => 150 + (peso * 150), // zona internacional
+            "0" => 50.00,  // zona local
+            "1" => 85.00, // zona nacional
+            "2" => 150.00, // zona internacional
             _ => 0
         };
 
-        if (chkServicioExpres.IsChecked)
-        {
-            envio += 100;
-        }
+        double recargoExpres = chkServicioExpres.IsChecked ? 100.00 : 0;
+
+        double envio = (peso * tarifa) + recargoExpres;
+
 
         lblValorPaquete.Text = $"L. {envio:F2}";
-        lbl.Text = "Costo total del envío";
+        lbl.Text = "Costo total del envio";
 
         lblResultado.Text =
-            $"Descripción: {txtDescripcion.Text}\n" +
+            $"Descripcion: {txtDescripcion.Text}\n" +
             $"Peso: {peso:F2} kg\n" +
             $"Destino: {pckDestino.Items[pckDestino.SelectedIndex]}\n" +
-            $"Servicio Exprés: {(chkServicioExpres.IsChecked ? "Sí" : "No")}";
+            $"Tarifa por kg: L.{tarifa:F2}\n" +
+            $"Servicio Expres: L. {recargoExpres:F2}";
 
-        brResultado.IsVisible = true;
 
+        if(envio < 300.00)
+        {
+            brResultado.BackgroundColor = Color.FromArgb("#DCFCE7");
+        }
+        else
+        {
+            brResultado.BackgroundColor = Color.FromArgb("E0F2FE");
+        }
 
+      
 
         //Por ultimo, muestra la tarjeta que estaba oculta 
         brResultado.IsVisible = true;
